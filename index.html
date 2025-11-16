@@ -178,3 +178,148 @@ function downloadCSV() {
 
 </body>
 </html>
+    label {
+        margin-top: 12px;
+        display: block;
+        font-size: 17px;
+        font-weight: 600;
+    }
+    textarea.inputbox {
+        width: 100%;
+        height: 110px;
+        margin-top: 10px;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
+    }
+    input, button {
+        width: 100%;
+        padding: 14px;
+        font-size: 18px;
+        margin-top: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    button {
+        border: none;
+        background: #007aff;
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    button:hover {
+        background: #0063cc;
+    }
+    textarea#output {
+        width: 100%;
+        height: 260px;
+        margin-top: 15px;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📱 多前缀号码生成器</h1>
+    <p class="desc">输入多个前6位前缀，每行一个，例如：407270、407276</p>
+
+    <label>多个前缀（每行一个）</label>
+    <textarea class="inputbox" id="prefixList" placeholder="407270
+407276
+407281
+407289
+407290"></textarea>
+
+    <label>每个前缀生成数量（如：50）</label>
+    <input type="number" id="count" value="50">
+
+    <button onclick="generateNumbers()">🎯 生成号码</button>
+    <button onclick="copyText()">📋 复制全部</button>
+    <button onclick="downloadTxt()">📄 下载 TXT</button>
+    <button onclick="downloadCSV()">📊 下载 CSV</button>
+
+    <textarea id="output" placeholder="生成结果会显示在这里..."></textarea>
+</div>
+
+<script>
+function generateNumbers() {
+    let prefixText = document.getElementById("prefixList").value.trim();
+    let count = parseInt(document.getElementById("count").value);
+    let output = document.getElementById("output");
+
+    if (!prefixText) {
+        alert("请输入至少一个前缀！");
+        return;
+    }
+    if (count <= 0) {
+        alert("数量必须大于 0！");
+        return;
+    }
+
+    let prefixes = prefixText.split("\n")
+        .map(p => p.trim())
+        .filter(p => p.length === 6 && !isNaN(p));
+
+    if (prefixes.length === 0) {
+        alert("请输入有效的前6位数字前缀！");
+        return;
+    }
+
+    let finalNumbers = [];
+
+    prefixes.forEach(prefix => {
+        let numbers = new Set();
+        while (numbers.size < count) {
+            let last4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            numbers.add(prefix + last4);
+        }
+        finalNumbers.push(...Array.from(numbers));
+    });
+
+    output.value = finalNumbers.join("\n");
+}
+
+function copyText() {
+    let output = document.getElementById("output");
+    output.select();
+    document.execCommand("copy");
+    alert("✔ 已复制全部号码");
+}
+
+function downloadTxt() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有数据可以下载！");
+    let blob = new Blob([content], {type: "text/plain"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "numbers.txt";
+    a.click();
+}
+
+function downloadCSV() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有数据可以下载！");
+    let csvContent = "phone_number\n" + 
+                     content.split("\n").map(n => `"${n}"`).join("\n");
+    let blob = new Blob([csvContent], {type: "text/csv"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "numbers.csv";
+    a.click();
+}
+</script>
+
+</body>
+</html>
+
