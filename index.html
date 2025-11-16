@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>电话号码生成器 Pro</title>
+<title>电话号码生成器 Pro（多前缀）</title>
 
 <style>
     body { 
@@ -14,7 +14,7 @@
         color: #333;
     }
     .container {
-        max-width: 520px;
+        max-width: 540px;
         margin: 0 auto;
         background: #ffffff;
         padding: 28px;
@@ -30,15 +30,25 @@
     }
     p.desc {
         text-align: center;
-        font-size: 16px;
+        font-size: 15px;
         color: #666;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
     label {
-        margin-top: 15px;
+        margin-top: 12px;
         display: block;
         font-size: 17px;
         font-weight: 600;
+    }
+    textarea.inputbox {
+        width: 100%;
+        height: 110px;
+        margin-top: 10px;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
     }
     input, button {
         width: 100%;
@@ -60,7 +70,7 @@
     button:hover {
         background: #0063cc;
     }
-    textarea {
+    textarea#output {
         width: 100%;
         height: 260px;
         margin-top: 15px;
@@ -70,12 +80,6 @@
         border: 1px solid #ccc;
         resize: none;
     }
-    .footer {
-        text-align: center;
-        margin-top: 25px;
-        font-size: 14px;
-        color: #999;
-    }
 </style>
 </head>
 
@@ -83,31 +87,35 @@
 
 <div class="container">
 
-    <h1>📱 电话号码生成器 Pro</h1>
-    <p class="desc">输入前 6 位，本工具自动生成随机电话号码（适合营销测试）</p>
+    <h1>📱 多前缀号码生成器</h1>
+    <p class="desc">输入多个前6位前缀，每行一个，例如：407270、407276</p>
 
-    <label>前 6 位号码（如 407768）</label>
-    <input type="text" id="prefix" placeholder="输入前6位">
+    <label>多个前缀（每行一个）</label>
+    <textarea class="inputbox" id="prefixList" placeholder="407270
+407276
+407281
+407289
+407290"></textarea>
 
-    <label>生成数量（如 50）</label>
+    <label>每个前缀生成数量（如：50）</label>
     <input type="number" id="count" value="50">
 
     <button onclick="generateNumbers()">🎯 生成号码</button>
-    <button onclick="copyText()">📋 一键复制全部</button>
+    <button onclick="copyText()">📋 复制全部</button>
     <button onclick="downloadTxt()">📄 下载 TXT</button>
     <button onclick="downloadCSV()">📊 下载 CSV</button>
 
-    <textarea id="output" placeholder="生成的号码会显示在这里..."></textarea>
+    <textarea id="output" placeholder="生成结果会显示在这里..."></textarea>
 </div>
 
 <script>
 function generateNumbers() {
-    let prefix = document.getElementById("prefix").value.trim();
+    let prefixText = document.getElementById("prefixList").value.trim();
     let count = parseInt(document.getElementById("count").value);
     let output = document.getElementById("output");
 
-    if (prefix.length !== 6 || isNaN(prefix)) {
-        alert("前6位号码必须是 6 位数字！");
+    if (!prefixText) {
+        alert("请输入至少一个前缀！");
         return;
     }
     if (count <= 0) {
@@ -115,13 +123,27 @@ function generateNumbers() {
         return;
     }
 
-    let numbers = new Set();
-    while (numbers.size < count) {
-        let last4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        numbers.add(prefix + last4);
+    let prefixes = prefixText.split("\n")
+        .map(p => p.trim())
+        .filter(p => p.length === 6 && !isNaN(p));
+
+    if (prefixes.length === 0) {
+        alert("请输入有效的前6位数字前缀！");
+        return;
     }
 
-    output.value = Array.from(numbers).join("\n");
+    let finalNumbers = [];
+
+    prefixes.forEach(prefix => {
+        let numbers = new Set();
+        while (numbers.size < count) {
+            let last4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            numbers.add(prefix + last4);
+        }
+        finalNumbers.push(...Array.from(numbers));
+    });
+
+    output.value = finalNumbers.join("\n");
 }
 
 function copyText() {
@@ -153,8 +175,6 @@ function downloadCSV() {
     a.click();
 }
 </script>
-
-<div class="footer">© 电话营销随机号码生成工具</div>
 
 </body>
 </html>
