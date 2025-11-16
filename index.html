@@ -3,144 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>电话号码生成器 Pro（多前缀）</title>
+<title>号码生成器 Pro（修复版）</title>
 
 <style>
-    body { 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial; 
-        background: #f2f2f7; 
-        padding: 20px; 
-        margin: 0;
-        color: #333;
-    }
-    .container {
-        max-width: 540px;
-        margin: 0 auto;
-        background: #ffffff;
-        padding: 28px;
-        border-radius: 18px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-    }
-    h1 {
-        text-align: center;
-        font-size: 26px;
-        margin-bottom: 10px;
-        font-weight: 700;
-        color: #000;
-    }
-    p.desc {
-        text-align: center;
-        font-size: 15px;
-        color: #666;
-        margin-bottom: 20px;
-    }
-    label {
-        margin-top: 12px;
-        display: block;
-        font-size: 17px;
-        font-weight: 600;
-    }
-    textarea.inputbox {
-        width: 100%;
-        height: 110px;
-        margin-top: 10px;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 12px;
-        border: 1px solid #ccc;
-        resize: none;
-    }
-    input, button {
-        width: 100%;
-        padding: 14px;
-        font-size: 18px;
-        margin-top: 10px;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-    }
-    button {
-        border: none;
-        background: #007aff;
-        color: white;
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-    button:hover {
-        background: #0063cc;
-    }
-    textarea#output {
-        width: 100%;
-        height: 260px;
-        margin-top: 15px;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 12px;
-        border: 1px solid #ccc;
-        resize: none;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial; background: #f2f2f7; padding: 20px; }
+    .container { max-width: 540px; margin: auto; background: #fff; padding: 28px; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    h1 { text-align: center; font-size: 26px; margin-bottom: 10px; font-weight: 700; }
+    textarea,input,button { width: 100%; padding: 14px; margin-top: 12px; font-size: 17px; border-radius: 10px; border: 1px solid #ccc; }
+    button { background: #007aff; color: white; font-weight: 600; border: none; }
 </style>
 </head>
-
 <body>
 
 <div class="container">
+    <h1>📱 多前缀号码生成器（修复版）</h1>
 
-    <h1>📱 多前缀号码生成器</h1>
-    <p class="desc">输入多个前6位前缀，每行一个，例如：407270、407276</p>
+    <label>多个前缀（可带破折号、空行、空格，都自动识别）</label>
+    <textarea id="prefixList" rows="6" placeholder="407270
+407-276
+407 281
+(407)289
+407.290"></textarea>
 
-    <label>多个前缀（每行一个）</label>
-    <textarea class="inputbox" id="prefixList" placeholder="407270
-407276
-407281
-407289
-407290"></textarea>
-
-    <label>每个前缀生成数量（如：50）</label>
+    <label>每个前缀生成数量</label>
     <input type="number" id="count" value="50">
 
-    <button onclick="generateNumbers()">🎯 生成号码</button>
-    <button onclick="copyText()">📋 复制全部</button>
-    <button onclick="downloadTxt()">📄 下载 TXT</button>
-    <button onclick="downloadCSV()">📊 下载 CSV</button>
+    <button onclick="generateNumbers()">生成号码</button>
+    <button onclick="copyText()">复制全部</button>
+    <button onclick="downloadTxt()">下载 TXT</button>
+    <button onclick="downloadCSV()">下载 CSV</button>
 
-    <textarea id="output" placeholder="生成结果会显示在这里..."></textarea>
+    <textarea id="output" rows="12" placeholder="生成结果显示在这里"></textarea>
 </div>
 
 <script>
+// 🟢 自动清洗前缀：只提取数字
+function cleanPrefix(raw) {
+    return raw.replace(/\D/g, "");  // 去除所有非数字
+}
+
 function generateNumbers() {
     let prefixText = document.getElementById("prefixList").value.trim();
     let count = parseInt(document.getElementById("count").value);
     let output = document.getElementById("output");
 
-    if (!prefixText) {
-        alert("请输入至少一个前缀！");
-        return;
-    }
-    if (count <= 0) {
-        alert("数量必须大于 0！");
-        return;
-    }
+    let lines = prefixText.split("\n");
+    let prefixes = [];
 
-    let prefixes = prefixText.split("\n")
-        .map(p => p.trim())
-        .filter(p => p.length === 6 && !isNaN(p));
+    lines.forEach(line => {
+        let px = cleanPrefix(line.trim()); // 清洗成纯数字
+        if (px.length === 6) prefixes.push(px);
+    });
 
     if (prefixes.length === 0) {
-        alert("请输入有效的前6位数字前缀！");
+        alert("未检测到有效前缀！请输入 6 位数字开头的前缀。");
+        return;
+    }
+
+    if (count <= 0) {
+        alert("数量必须大于 0！");
         return;
     }
 
     let finalNumbers = [];
 
     prefixes.forEach(prefix => {
-        let numbers = new Set();
-        while (numbers.size < count) {
-            let last4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            numbers.add(prefix + last4);
+        let set = new Set();
+        while (set.size < count) {
+            let last4 = Math.floor(Math.random()*10000).toString().padStart(4,'0');
+            set.add(prefix + last4);
         }
-        finalNumbers.push(...Array.from(numbers));
+        finalNumbers.push(...Array.from(set));
     });
 
     output.value = finalNumbers.join("\n");
@@ -150,27 +83,24 @@ function copyText() {
     let output = document.getElementById("output");
     output.select();
     document.execCommand("copy");
-    alert("✔ 已复制全部号码");
+    alert("已复制");
 }
 
 function downloadTxt() {
     let content = document.getElementById("output").value;
-    if (!content) return alert("没有数据可以下载！");
-    let blob = new Blob([content], {type: "text/plain"});
+    if (!content) return alert("没有内容可下载");
     let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([content], {type: "text/plain"}));
     a.download = "numbers.txt";
     a.click();
 }
 
 function downloadCSV() {
     let content = document.getElementById("output").value;
-    if (!content) return alert("没有数据可以下载！");
-    let csvContent = "phone_number\n" + 
-                     content.split("\n").map(n => `"${n}"`).join("\n");
-    let blob = new Blob([csvContent], {type: "text/csv"});
+    if (!content) return alert("没有内容可下载");
+    let csv = "phone_number\n" + content.split("\n").map(n=>`"${n}"`).join("\n");
     let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
     a.download = "numbers.csv";
     a.click();
 }
@@ -322,4 +252,149 @@ function downloadCSV() {
 
 </body>
 </html>
+    label {
+        margin-top: 12px;
+        display: block;
+        font-size: 17px;
+        font-weight: 600;
+    }
+    textarea.inputbox {
+        width: 100%;
+        height: 110px;
+        margin-top: 10px;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
+    }
+    input, button {
+        width: 100%;
+        padding: 14px;
+        font-size: 18px;
+        margin-top: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    button {
+        border: none;
+        background: #007aff;
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    button:hover {
+        background: #0063cc;
+    }
+    textarea#output {
+        width: 100%;
+        height: 260px;
+        margin-top: 15px;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📱 多前缀号码生成器</h1>
+    <p class="desc">输入多个前6位前缀，每行一个，例如：407270、407276</p>
+
+    <label>多个前缀（每行一个）</label>
+    <textarea class="inputbox" id="prefixList" placeholder="407270
+407276
+407281
+407289
+407290"></textarea>
+
+    <label>每个前缀生成数量（如：50）</label>
+    <input type="number" id="count" value="50">
+
+    <button onclick="generateNumbers()">🎯 生成号码</button>
+    <button onclick="copyText()">📋 复制全部</button>
+    <button onclick="downloadTxt()">📄 下载 TXT</button>
+    <button onclick="downloadCSV()">📊 下载 CSV</button>
+
+    <textarea id="output" placeholder="生成结果会显示在这里..."></textarea>
+</div>
+
+<script>
+function generateNumbers() {
+    let prefixText = document.getElementById("prefixList").value.trim();
+    let count = parseInt(document.getElementById("count").value);
+    let output = document.getElementById("output");
+
+    if (!prefixText) {
+        alert("请输入至少一个前缀！");
+        return;
+    }
+    if (count <= 0) {
+        alert("数量必须大于 0！");
+        return;
+    }
+
+    let prefixes = prefixText.split("\n")
+        .map(p => p.trim())
+        .filter(p => p.length === 6 && !isNaN(p));
+
+    if (prefixes.length === 0) {
+        alert("请输入有效的前6位数字前缀！");
+        return;
+    }
+
+    let finalNumbers = [];
+
+    prefixes.forEach(prefix => {
+        let numbers = new Set();
+        while (numbers.size < count) {
+            let last4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            numbers.add(prefix + last4);
+        }
+        finalNumbers.push(...Array.from(numbers));
+    });
+
+    output.value = finalNumbers.join("\n");
+}
+
+function copyText() {
+    let output = document.getElementById("output");
+    output.select();
+    document.execCommand("copy");
+    alert("✔ 已复制全部号码");
+}
+
+function downloadTxt() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有数据可以下载！");
+    let blob = new Blob([content], {type: "text/plain"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "numbers.txt";
+    a.click();
+}
+
+function downloadCSV() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有数据可以下载！");
+    let csvContent = "phone_number\n" + 
+                     content.split("\n").map(n => `"${n}"`).join("\n");
+    let blob = new Blob([csvContent], {type: "text/csv"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "numbers.csv";
+    a.click();
+}
+</script>
+
+</body>
+</html>
+
 
