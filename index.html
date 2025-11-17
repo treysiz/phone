@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美国号码生成器</title>
+
+<style>
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial; 
+    background: #f2f2f7; 
+    padding: 20px; 
+    margin: 0;
+    color: #333;
+}
+.container {
+    max-width: 540px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+h1 {
+    text-align: center;
+    font-size: 26px;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+.desc-box {
+    background:#f7f7fa;
+    padding:12px 15px;
+    border-radius:12px;
+    margin-top:10px;
+    font-size:14px;
+    color:#555;
+}
+label {
+    margin-top: 15px;
+    display: block;
+    font-size: 17px;
+    font-weight: 600;
+}
+textarea.inputbox {
+    width: 100%;
+    height: 110px;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+input, button {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+button {
+    border: none;
+    background: #007aff;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+button:hover {
+    background: #0063cc;
+}
+textarea#output {
+    width: 100%;
+    height: 260px;
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>📱 美国号码生成器</h1>
+
+    <div class="desc-box">
+        输入多个前 6 位号码前缀，每行一个。例如：<br>
+        407270、407276、407281
+    </div>
+
+    <label>多个前缀（每行一个）</label>
+    <textarea class="inputbox" id="prefixList" placeholder="407270
+407276
+407281
+407289
+407290"></textarea>
+
+    <label>每个前缀生成数量</label>
+    <input type="number" id="count" value="50">
+
+    <button onclick="generateNumbers()">🎯 生成号码</button>
+    <button onclick="copyText()">📋 复制全部</button>
+    <button onclick="downloadTxt()">📄 下载 TXT</button>
+    <button onclick="downloadCSV()">📊 下载 CSV</button>
+
+    <textarea id="output" placeholder="生成结果会显示在这里..."></textarea>
+</div>
+
+<script>
+function cleanPrefix(raw) {
+    return raw.replace(/\D/g, "");
+}
+
+function generateNumbers() {
+    let prefixText = document.getElementById("prefixList").value;
+    let count = parseInt(document.getElementById("count").value);
+    let output = document.getElementById("output");
+
+    // 支持所有设备换行符
+    let lines = prefixText.split(/\r?\n/);
+
+    let prefixes = [];
+
+    lines.forEach(line => {
+        let px = cleanPrefix(line.trim());
+        if (px.length === 6) prefixes.push(px);
+    });
+
+    if (prefixes.length === 0) {
+        alert("未检测到有效前缀，请输入 6 位数字前缀");
+        return;
+    }
+    if (count <= 0) {
+        alert("数量必须大于 0");
+        return;
+    }
+
+    let results = [];
+
+    prefixes.forEach(prefix => {
+        let localSet = new Set();
+        while (localSet.size < count) {
+            let last4 = Math.floor(Math.random() * 10000)
+                        .toString().padStart(4, "0");
+            localSet.add(prefix + last4);
+        }
+        results.push(...localSet);
+    });
+
+    output.value = results.join("\n");
+}
+
+function copyText() {
+    let output = document.getElementById("output");
+    if (!output.value) return alert("没有内容可复制");
+    output.select();
+    document.execCommand("copy");
+    alert("已复制");
+}
+
+function downloadTxt() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有内容可下载");
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([content], {type: "text/plain"}));
+    a.download = "numbers.txt";
+    a.click();
+}
+
+function downloadCSV() {
+    let content = document.getElementById("output").value;
+    if (!content) return alert("没有内容可下载");
+    let csv = "phone_number\n" + content.split("\n").map(n=>`"${n}"`).join("\n");
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    a.download = "numbers.csv";
+    a.click();
+}
+</script>
+
+</body>
+</html>
